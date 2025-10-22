@@ -1,6 +1,6 @@
 apiVersion: v2
-name: qalby-proxy
-description: A Helm chart for Qalby Proxy - FastAPI application with audio and agent capabilities
+name: livellm-proxy
+description: A Helm chart for Livellm Proxy - FastAPI application with audio and agent capabilities
 
 # A chart can be either an 'application' or a 'library' chart.
 #
@@ -24,14 +24,14 @@ version: 0.1.0
 appVersion: "0.1.0"
 
 # Chart metadata
-home: https://github.com/your-org/qalby-proxy
+home: https://github.com/qalby-tech/livellm-proxy-chart.git
 sources:
-  - https://github.com/your-org/qalby-proxy
+  - https://github.com/qalby-tech/livellm-proxy-chart.git
 keywords:
   - fastapi
   - audio
   - ai
   - proxy
 maintainers:
-  - name: Your Name
-    email: your.email@example.com
+  - name: Kamil Saliamov
+    email: kamasalyamov@gmail.com
