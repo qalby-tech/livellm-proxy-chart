@@ -44,13 +44,19 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+          {{- if .Values.existingSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.existingSecret }}
+          {{- end }}
           env:
             - name: HOST
               value: "0.0.0.0"
             - name: PORT
               value: "{{ .Values.service.port }}"
+            {{- if not .Values.existingSecret }}
             {{- if .Values.env.logfire_token }}
-            - name: LOGFIRE_WRITE_TOKEN
+            - name: LOGFIRE_TOKEN
               value: "{{ .Values.env.logfire_token }}"
             {{- end }}
             {{- if .Values.env.otel_exporter_otlp_endpoint }}
@@ -60,6 +66,7 @@ spec:
             {{- range $key, $value := .Values.env.custom }}
             - name: {{ $key }}
               value: "{{ $value }}"
+            {{- end }}
             {{- end }}
           {{- with .Values.livenessProbe }}
           livenessProbe:

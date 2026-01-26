@@ -19,7 +19,12 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
-# Environment variables configuration
+# Use an existing secret for sensitive environment variables (LOGFIRE_TOKEN, REDIS_URL, etc.)
+# When set, env.logfire_token, env.otel_exporter_otlp_endpoint, and env.custom are ignored
+# The secret should contain keys matching the environment variable names your app expects
+existingSecret: ""
+
+# Environment variables configuration (ignored if existingSecret is set)
 env:
   # Logfire configuration
   logfire_token: ""
