@@ -145,6 +145,23 @@ persistence:
   size: 1Gi
   mountPath: /data
 
+# Operator configuration
+operator:
+  enabled: true
+  image:
+    repository: kamasalyamov/livellm-proxy
+    pullPolicy: Always
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+
+
 # Additional volumes on the output Deployment definition.
 volumes: []
 # - name: foo

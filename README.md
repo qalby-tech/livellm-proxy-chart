@@ -16,6 +16,57 @@ This Helm chart deploys the Qalby Proxy application on a Kubernetes cluster. The
 - **Security**: Configurable security contexts and service accounts
 - **Ingress Support**: Optional ingress configuration for external access
 - **Persistence**: Optional PVC for file-based storage
+- **Kubernetes Operator**: Automatic registration of LLM providers via CRDs
+
+## Kubernetes Operator
+
+This chart includes an optional Kubernetes Operator that manages `LLMProvider` resources.
+The operator watches for `LLMProvider` Custom Resources in all namespaces and automatically registers them with the proxy.
+
+### Enabling the Operator
+
+The operator is enabled by default. You can configure it in `values.yaml`:
+
+```yaml
+operator:
+  enabled: true
+  image:
+    repository: kamasalyamov/livellm-proxy-operator
+    tag: "latest"
+```
+
+### Using Custom Resources
+
+Once deployed, you can register LLM providers using Kubernetes manifests:
+
+```yaml
+apiVersion: proxy.livellm.ai/v1
+kind: LLMProvider
+metadata:
+  name: openai-provider
+  namespace: default
+spec:
+  provider: openai
+  apiKeyRef:
+    name: openai-secret
+    key: api-key
+  blacklistModels:
+    - gpt-3.5-turbo-0301
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: openai-secret
+  namespace: default
+stringData:
+  api-key: sk-proj-...
+```
+
+The operator will automatically:
+1. Detect the `LLMProvider` resource
+2. Read the API key from the referenced Secret
+3. Register the provider with the Livellm Proxy
+4. Update the `LLMProvider` status to `Registered`
 
 ## Prerequisites
 
@@ -351,6 +402,11 @@ For issues and questions:
 - Contact the maintainers
 
 ## Changelog
+
+### 0.3.0
+- Added Kubernetes Operator for managing LLM providers via CRDs
+- Operator is enabled by default
+- Added `operator` configuration section to values.yaml
 
 ### 0.2.0
 - Added secret management (auto-created or existing secret support)
