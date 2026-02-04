@@ -44,38 +44,18 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
-          {{- if .Values.existingSecret }}
           envFrom:
             - secretRef:
+                {{- if .Values.existingSecret }}
                 name: {{ .Values.existingSecret }}
-          {{- end }}
+                {{- else }}
+                name: {{ include "chart.fullname" . }}-env
+                {{- end }}
           env:
             - name: HOST
               value: "0.0.0.0"
             - name: PORT
               value: "{{ .Values.service.port }}"
-            {{- if .Values.persistence.enabled }}
-            - name: FILE_STORAGE_PATH
-              value: "{{ .Values.persistence.mountPath }}/providers.json"
-            {{- end }}
-            {{- if not .Values.existingSecret }}
-            {{- if .Values.env.logfire_token }}
-            - name: LOGFIRE_TOKEN
-              value: "{{ .Values.env.logfire_token }}"
-            {{- end }}
-            {{- if .Values.env.otel_exporter_otlp_endpoint }}
-            - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: "{{ .Values.env.otel_exporter_otlp_endpoint }}"
-            {{- end }}
-            {{- if .Values.env.encryption_salt }}
-            - name: ENCRYPTION_SALT
-              value: "{{ .Values.env.encryption_salt }}"
-            {{- end }}
-            {{- range $key, $value := .Values.env.custom }}
-            - name: {{ $key }}
-              value: "{{ $value }}"
-            {{- end }}
-            {{- end }}
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}

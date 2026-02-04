@@ -19,25 +19,35 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
-# Use an existing secret for sensitive environment variables (LOGFIRE_TOKEN, REDIS_URL, etc.)
-# When set, env.logfire_token, env.otel_exporter_otlp_endpoint, and env.custom are ignored
-# The secret should contain keys matching the environment variable names your app expects
+# Use an existing secret for sensitive environment variables
+# When set, the env section below is ignored and all env vars are loaded from this secret
+# The secret should contain keys: LOGFIRE_WRITE_TOKEN, OTEL_EXPORTER_OTLP_ENDPOINT, 
+# ENCRYPTION_SALT, REDIS_URL, TOKEN_COUNT_OVERHEAD, ENABLE_STORAGE_RECONCILIATION
 existingSecret: ""
 
-# Environment variables configuration (ignored if existingSecret is set)
+# Environment variables configuration
+# If existingSecret is not set, these values will be used to create a new secret
 env:
   # Logfire configuration
-  logfire_token: ""
+  logfire_write_token: ""
   otel_exporter_otlp_endpoint: ""
-  encryption_salt: ""  # Optional: if not provided, data will be stored unencrypted
   
-  # Application configuration - automatically set based on service port
-  # host: "0.0.0.0"  # Will be automatically set in deployment template
-  # port: "8000"     # Will be automatically set to service.port in deployment template
+  # Encryption salt for provider settings (optional)
+  # If not provided, data will be stored unencrypted
+  encryption_salt: ""
   
-  # Additional environment variables can be added here
-  # Custom environment variables
-  custom: {}
+  # Redis URL for provider settings storage (optional)
+  # If provided, uses Redis for persistence; otherwise uses file storage
+  # Example: redis://localhost:6379/0 or redis://:password@host:port/db
+  redis_url: ""
+  
+  # Token count overhead multiplier for context overflow handling (optional)
+  # Default: 1.20 (20% buffer)
+  token_count_overhead: ""
+  
+  # Enable/disable storage reconciliation between file and Redis (optional)
+  # Default: true
+  enable_storage_reconciliation: ""
 
 # This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
 serviceAccount:
