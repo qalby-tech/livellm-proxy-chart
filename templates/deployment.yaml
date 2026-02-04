@@ -54,6 +54,10 @@ spec:
               value: "0.0.0.0"
             - name: PORT
               value: "{{ .Values.service.port }}"
+            {{- if .Values.persistence.enabled }}
+            - name: FILE_STORAGE_PATH
+              value: "{{ .Values.persistence.mountPath }}/providers.json"
+            {{- end }}
             {{- if not .Values.existingSecret }}
             {{- if .Values.env.logfire_token }}
             - name: LOGFIRE_TOKEN
@@ -62,6 +66,10 @@ spec:
             {{- if .Values.env.otel_exporter_otlp_endpoint }}
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "{{ .Values.env.otel_exporter_otlp_endpoint }}"
+            {{- end }}
+            {{- if .Values.env.encryption_salt }}
+            - name: ENCRYPTION_SALT
+              value: "{{ .Values.env.encryption_salt }}"
             {{- end }}
             {{- range $key, $value := .Values.env.custom }}
             - name: {{ $key }}
@@ -80,14 +88,23 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.volumeMounts }}
           volumeMounts:
+            {{- if .Values.persistence.enabled }}
+            - name: data
+              mountPath: {{ .Values.persistence.mountPath }}
+            {{- end }}
+            {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
-          {{- end }}
-      {{- with .Values.volumes }}
+            {{- end }}
       volumes:
+        {{- if .Values.persistence.enabled }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "chart.fullname" . }}-pvc
+        {{- end }}
+        {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
