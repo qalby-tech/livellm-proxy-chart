@@ -19,7 +19,7 @@ fullnameOverride: ""
 # Use an existing secret for sensitive environment variables
 # When set, the env section below is ignored and all env vars are loaded from this secret
 # The secret should contain keys: LOGFIRE_WRITE_TOKEN, OTEL_EXPORTER_OTLP_ENDPOINT, 
-# ENCRYPTION_SALT, REDIS_URL, TOKEN_COUNT_OVERHEAD, ENABLE_STORAGE_RECONCILIATION
+# ENCRYPTION_SALT, REDIS_URL, TOKEN_COUNT_OVERHEAD, ENABLE_STORAGE_RECONCILIATION, RECONCILIATION_INTERVAL_SECONDS
 existingSecret: ""
 # Environment variables configuration
 # If existingSecret is not set, these values will be used to create a new secret
@@ -40,6 +40,9 @@ env:
   # Enable/disable storage reconciliation between file and Redis (optional)
   # Default: true
   enable_storage_reconciliation: ""
+  # Interval in seconds for periodic reconciliation between file storage and Redis (optional)
+  # Default: 300 (5 minutes)
+  reconciliation_interval_seconds: ""
 # This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
 serviceAccount:
   # Specifies whether a service account should be created
