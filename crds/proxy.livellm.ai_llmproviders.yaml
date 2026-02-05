@@ -58,6 +58,9 @@ spec:
               provider:
                 description: Provider type (e.g., openai, google, anthropic)
                 type: string
+              refreshInterval:
+                description: 'RefreshInterval specifies how often to reconcile the provider status Default: 5m'
+                type: string
             required:
             - apiKeyRef
             - provider
@@ -68,6 +71,10 @@ spec:
               message:
                 description: Message contains any error or status message
                 type: string
+              lastSyncedGeneration:
+                description: LastSyncedGeneration is the generation of the object that was last successfully synced
+                format: int64
+                type: integer
               registered:
                 description: Registered indicates if the provider is successfully
                   registered with the proxy
