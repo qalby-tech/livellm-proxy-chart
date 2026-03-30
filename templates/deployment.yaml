@@ -56,6 +56,13 @@ spec:
               value: "0.0.0.0"
             - name: PORT
               value: "{{ .Values.service.port }}"
+            {{- if and .Values.redis.enabled .Values.existingSecret (not .Values.env.redis_url) }}
+            # existingSecret is in use and does not carry REDIS_URL, so we inject
+            # the internal Redis service URL directly.  Direct env entries take
+            # precedence over envFrom, so this safely overrides nothing.
+            - name: REDIS_URL
+              value: "redis://{{ include "chart.fullname" . }}-redis:6379/0"
+            {{- end }}
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
