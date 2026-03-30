@@ -37,7 +37,7 @@ spec:
                 name: {{ include "chart.fullname" . }}-env
                 {{- end }}
           env:
-            {{- if and .Values.redis.enabled .Values.existingSecret (not .Values.env.redis_url) }}
+            {{- if and .Values.redis.enabled .Values.existingSecret (not ((.Values.env).redis_url)) }}
             # Same logic as the proxy deployment: inject the internal Redis URL
             # when existingSecret is used and no explicit override is provided.
             - name: REDIS_URL
