@@ -4,128 +4,113 @@
 # Proxy deployment
 # ---------------------------------------------------------------------------
 replicaCount: 1
-
 image:
-    repository: kamasalyamov/livellm-proxy
-    pullPolicy: Always
-    tag: ""
-
+  repository: kamasalyamov/livellm-proxy
+  pullPolicy: Always
+  tag: ""
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
-
 # Use an existing Secret for all sensitive env vars.
 # When set, the env section below is ignored and all env vars are loaded from
 # this Secret.  The Secret must contain:
 #   LOGFIRE_WRITE_TOKEN, OTEL_EXPORTER_OTLP_ENDPOINT,
 #   ENCRYPTION_SALT, REDIS_URL, TOKEN_COUNT_OVERHEAD
 existingSecret: ""
-
 # Environment variables — used to create the managed Secret when existingSecret
 # is not set.
 env:
-    logfire_write_token: ""
-    otel_exporter_otlp_endpoint: ""
-    # Salt for Fernet encryption of provider data stored in Redis.
-    # Must be the same value for both the proxy and the operator.
-    # If not provided, data is stored as plain JSON.
-    encryption_salt: ""
-    # Override the auto-generated internal Redis URL.
-    # Leave empty when redis.enabled=true — the URL is built automatically.
-    # Set this when using an external Redis instance.
-    redis_url: ""
-    # Tiktoken safety overhead (default 1.20 = 20 % buffer).
-    token_count_overhead: ""
-
+  logfire_write_token: ""
+  otel_exporter_otlp_endpoint: ""
+  # Salt for Fernet encryption of provider data stored in Redis.
+  # Must be the same value for both the proxy and the operator.
+  # If not provided, data is stored as plain JSON.
+  encryption_salt: ""
+  # Override the auto-generated internal Redis URL.
+  # Leave empty when redis.enabled=true — the URL is built automatically.
+  # Set this when using an external Redis instance.
+  redis_url: ""
+  # Tiktoken safety overhead (default 1.20 = 20 % buffer).
+  token_count_overhead: ""
 serviceAccount:
-    create: true
-    automount: true
-    annotations: {}
-    name: ""
-
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
 podAnnotations: {}
 podLabels: {}
 podSecurityContext: {}
 securityContext: {}
-
 service:
-    type: ClusterIP
-    port: 8000
-
+  type: ClusterIP
+  port: 8000
 ingress:
-    enabled: false
-    className: ""
-    annotations: {}
-    hosts:
-        - host: chart-example.local
-          paths:
-              - path: /
-                pathType: ImplementationSpecific
-    tls: []
-
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
 resources: {}
-
 livenessProbe:
-    httpGet:
-        path: /ping
-        port: http
-    initialDelaySeconds: 30
-    periodSeconds: 10
+  httpGet:
+    path: /ping
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
 readinessProbe:
-    httpGet:
-        path: /ping
-        port: http
-    initialDelaySeconds: 5
-    periodSeconds: 5
-
+  httpGet:
+    path: /ping
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5
 autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 100
-    targetCPUUtilizationPercentage: 80
-
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
 volumes: []
 volumeMounts: []
-
 nodeSelector: {}
 tolerations: []
 affinity: {}
-
 # ---------------------------------------------------------------------------
 # Redis  (internal instance, deployed alongside the proxy)
 # ---------------------------------------------------------------------------
 redis:
-    # Set to false to use an external Redis and supply redis_url in env above.
+  # Set to false to use an external Redis and supply redis_url in env above.
+  enabled: true
+  image:
+    repository: redis
+    tag: "7-alpine"
+    pullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  persistence:
+    # Enable a PVC for Redis data — recommended for production.
     enabled: true
-    image:
-        repository: redis
-        tag: "7-alpine"
-        pullPolicy: IfNotPresent
-    resources:
-        limits:
-            cpu: 200m
-            memory: 256Mi
-        requests:
-            cpu: 100m
-            memory: 128Mi
-    persistence:
-        # Enable a PVC for Redis data — recommended for production.
-        enabled: true
-        size: 1Gi
-
+    size: 1Gi
 # ---------------------------------------------------------------------------
 # Operator
 # ---------------------------------------------------------------------------
 operator:
-    enabled: true
-    image:
-        repository: kamasalyamov/livellm-proxy-operator
-        pullPolicy: Always
-        tag: ""
-    resources:
-        limits:
-            cpu: 100m
-            memory: 128Mi
-        requests:
-            cpu: 100m
-            memory: 64Mi
+  enabled: true
+  image:
+    repository: kamasalyamov/livellm-proxy
+    pullPolicy: Always
+    tag: ""
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi

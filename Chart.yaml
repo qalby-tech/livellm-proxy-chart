@@ -20,18 +20,18 @@ version: 0.4.0
 # It is recommended to use it with quotes.
 appVersion: "1.6.1"
 annotations:
-    operatorVersion: "0.2.5"
+  operatorVersion: "1.0.1"
 # Chart metadata
 home: https://github.com/qalby-tech/livellm-proxy-chart.git
 sources:
-    - https://github.com/qalby-tech/livellm-proxy-chart.git
+  - https://github.com/qalby-tech/livellm-proxy-chart.git
 keywords:
-    - fastapi
-    - audio
-    - ai
-    - proxy
-    - operator
-    - kubernetes
+  - fastapi
+  - audio
+  - ai
+  - proxy
+  - operator
+  - kubernetes
 maintainers:
-    - name: Kamil Saliamov
-      email: kamasalyamov@gmail.com
+  - name: Kamil Saliamov
+    email: kamasalyamov@gmail.com
