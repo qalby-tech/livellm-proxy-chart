@@ -29,7 +29,14 @@ spec:
             - /manager
           args:
             - --leader-elect
-            - --proxy-url={{ .Values.operator.proxyUrl | default (printf "http://%s:%d" (include "chart.fullname" .) (.Values.service.port | int)) }}
+          # Reads REDIS_URL and ENCRYPTION_SALT from the same Secret as the proxy
+          envFrom:
+            - secretRef:
+                {{- if .Values.existingSecret }}
+                name: {{ .Values.existingSecret }}
+                {{- else }}
+                name: {{ include "chart.fullname" . }}-env
+                {{- end }}
           resources:
             {{- toYaml .Values.operator.resources | nindent 12 }}
           livenessProbe:
