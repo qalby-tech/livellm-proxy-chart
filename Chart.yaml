@@ -20,7 +20,7 @@ version: 0.4.1
 # It is recommended to use it with quotes.
 appVersion: "1.8.1"
 annotations:
-  operatorVersion: "1.1.1"
+  operatorVersion: "1.2.0"
 # Chart metadata
 home: https://github.com/qalby-tech/livellm-proxy-chart.git
 sources:
