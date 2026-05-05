@@ -11,17 +11,22 @@ image:
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
-# Use an existing Secret for all sensitive env vars.
-# When set, the env section below is ignored and all env vars are loaded from
-# this Secret.  The Secret must contain:
-#   LOGFIRE_WRITE_TOKEN, OTEL_EXPORTER_OTLP_ENDPOINT,
-#   ENCRYPTION_SALT, REDIS_URL, TOKEN_COUNT_OVERHEAD
+# Use an existing Secret for sensitive env vars (ENCRYPTION_SALT, REDIS_URL).
+# When set, sensitive env vars are loaded from this Secret. Non-sensitive OTel
+# config (OTEL_*, LOG_PROMPTS, DEFAULT_PROJECT) is still injected as direct env
+# from the values below.
 existingSecret: ""
 # Environment variables — used to create the managed Secret when existingSecret
-# is not set.
+# is not set, and (for non-secret keys) injected directly into the deployment.
 env:
-  logfire_write_token: ""
+  # Non-secret OTel config — injected as direct env vars regardless of existingSecret.
   otel_exporter_otlp_endpoint: ""
+  otel_service_name: "livellm-proxy"
+  otel_environment: ""
+  # Whether to record prompt / completion text on spans (sensitive — default off).
+  log_prompts: "false"
+  # Fallback project name when a request omits the X-Project header.
+  default_project: ""
   # Salt for Fernet encryption of provider data stored in Redis.
   # Must be the same value for both the proxy and the operator.
   # If not provided, data is stored as plain JSON.

@@ -63,6 +63,28 @@ spec:
             - name: REDIS_URL
               value: "redis://{{ include "chart.fullname" . }}-redis:6379/0"
             {{- end }}
+            {{- /* Non-secret OTel / project knobs — always injected directly so
+                   they are applied even when an existingSecret is in use. */}}
+            {{- if (.Values.env).otel_exporter_otlp_endpoint }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ .Values.env.otel_exporter_otlp_endpoint | quote }}
+            {{- end }}
+            {{- if (.Values.env).otel_service_name }}
+            - name: OTEL_SERVICE_NAME
+              value: {{ .Values.env.otel_service_name | quote }}
+            {{- end }}
+            {{- if (.Values.env).otel_environment }}
+            - name: OTEL_ENVIRONMENT
+              value: {{ .Values.env.otel_environment | quote }}
+            {{- end }}
+            {{- if (.Values.env).log_prompts }}
+            - name: LOG_PROMPTS
+              value: {{ .Values.env.log_prompts | quote }}
+            {{- end }}
+            {{- if (.Values.env).default_project }}
+            - name: DEFAULT_PROJECT
+              value: {{ .Values.env.default_project | quote }}
+            {{- end }}
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
