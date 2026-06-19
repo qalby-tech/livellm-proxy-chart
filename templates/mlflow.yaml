@@ -42,6 +42,15 @@ spec:
             - --backend-store-uri={{ .Values.mlflow.backendStoreUri | default "sqlite:////mlflow/data/mlflow.db" }}
             - --artifacts-destination={{ .Values.mlflow.artifactRoot | default "/mlflow/data/artifacts" }}
             - --serve-artifacts
+            {{- if .Values.mlflow.allowedHosts }}
+            # MLflow 3.x validates the Host header on every request (incl. the
+            # /health probe), so the ingress host, in-cluster service DNS and
+            # probe pod IP must all be allowed.
+            - --allowed-hosts={{ .Values.mlflow.allowedHosts }}
+            {{- end }}
+            {{- with .Values.mlflow.corsAllowedOrigins }}
+            - --cors-allowed-origins={{ . }}
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.mlflow.service.port }}

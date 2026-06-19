@@ -144,6 +144,14 @@ mlflow:
   service:
     type: ClusterIP
     port: 5000
+  # MLflow 3.x validates the Host header (DNS-rebinding protection) and rejects
+  # anything outside localhost + private IPs by default — which breaks the
+  # ingress host, the proxy's service-DNS Host header and (depending on pod CIDR)
+  # the health probe. Default allows all hosts; tighten to a comma-separated
+  # list/wildcards e.g. "mlflow.vodovoz.internal,*.svc.cluster.local:5000".
+  allowedHosts: "*"
+  # Optional CORS origins (default mlflow: localhost). Same-origin UI needs none.
+  corsAllowedOrigins: ""
   # Ingress for the MLflow UI. Host-based is recommended (MLflow serves its UI
   # at the host root). Same shape as the proxy `ingress` block above.
   ingress:
