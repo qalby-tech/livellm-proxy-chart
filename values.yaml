@@ -194,10 +194,37 @@ mlflow:
       memory: 1Gi
   persistence:
     # Recommended for production so traces survive restarts. When false an
-    # emptyDir is used and data is lost on pod restart.
+    # emptyDir is used and data is lost on pod restart. (Artifacts only when
+    # postgres is enabled — the trace DB then lives in Postgres.)
     enabled: true
     size: 5Gi
     storageClass: ""
+  # PostgreSQL backing store. SQLite (the default backend) is a single writer
+  # and cannot keep up with high trace-write volume; enable this to use Postgres
+  # instead, which lets MLflow run multiple workers and stay healthy under load.
+  postgres:
+    enabled: false
+    image:
+      repository: postgres
+      tag: "16-alpine"
+      pullPolicy: IfNotPresent
+    auth:
+      database: mlflow
+      username: mlflow
+      # REQUIRED when postgres.enabled. Internal-only DB (ClusterIP); set in the
+      # environment's values, or move to an existing Secret.
+      password: ""
+    resources:
+      limits:
+        cpu: "1"
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: ""
   nodeSelector: {}
   tolerations: []
   affinity: {}

@@ -1,0 +1,122 @@
+{{- if and .Values.mlflow.enabled .Values.mlflow.postgres.enabled }}
+# ---------------------------------------------------------------------------
+# PostgreSQL backing store for the MLflow tracking server. SQLite (single
+# writer) cannot keep up with the trace-write volume from the voice pipeline;
+# Postgres handles concurrent writes so MLflow stays healthy.
+# ---------------------------------------------------------------------------
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "chart.fullname" . }}-mlflow-postgres
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mlflow-postgres
+type: Opaque
+stringData:
+  password: {{ required "mlflow.postgres.auth.password is required when mlflow.postgres.enabled" .Values.mlflow.postgres.auth.password | quote }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "chart.fullname" . }}-mlflow-postgres
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mlflow-postgres
+spec:
+  serviceName: {{ include "chart.fullname" . }}-mlflow-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "chart.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: mlflow-postgres
+  template:
+    metadata:
+      labels:
+        {{- include "chart.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: mlflow-postgres
+    spec:
+      {{- with .Values.mlflow.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: postgres
+          image: "{{ .Values.mlflow.postgres.image.repository }}:{{ .Values.mlflow.postgres.image.tag }}"
+          imagePullPolicy: {{ .Values.mlflow.postgres.image.pullPolicy }}
+          # Port name must NOT be "http" (the proxy Service selector would adopt it).
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.mlflow.postgres.auth.database | quote }}
+            - name: POSTGRES_USER
+              value: {{ .Values.mlflow.postgres.auth.username | quote }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "chart.fullname" . }}-mlflow-postgres
+                  key: password
+            # Keep data in a subdir so the volume root (lost+found) doesn't clash.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          {{- with .Values.mlflow.postgres.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", {{ .Values.mlflow.postgres.auth.username | quote }}, "-d", {{ .Values.mlflow.postgres.auth.database | quote }}]
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", {{ .Values.mlflow.postgres.auth.username | quote }}, "-d", {{ .Values.mlflow.postgres.auth.database | quote }}]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+      {{- with .Values.mlflow.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mlflow.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- with .Values.mlflow.postgres.persistence.storageClass }}
+        storageClassName: {{ . }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.mlflow.postgres.persistence.size }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "chart.fullname" . }}-mlflow-postgres
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mlflow-postgres
+spec:
+  type: ClusterIP
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+      protocol: TCP
+  selector:
+    {{- include "chart.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: mlflow-postgres
+{{- end }}

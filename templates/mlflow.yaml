@@ -34,6 +34,30 @@ spec:
         - name: mlflow
           image: "{{ .Values.mlflow.image.repository }}:{{ .Values.mlflow.image.tag }}"
           imagePullPolicy: {{ .Values.mlflow.image.pullPolicy }}
+          {{- if .Values.mlflow.postgres.enabled }}
+          env:
+            - name: MLFLOW_POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "chart.fullname" . }}-mlflow-postgres
+                  key: password
+          # PostgreSQL backend — concurrent writes, handles the trace volume that
+          # SQLite (single writer) cannot. The stock MLflow image lacks the pg
+          # driver, so install it at startup, then exec the server.
+          command: ["/bin/sh", "-c"]
+          args:
+            - >-
+              pip install --quiet --no-cache-dir psycopg2-binary &&
+              exec mlflow server
+              --host=0.0.0.0
+              --port={{ .Values.mlflow.service.port }}
+              --workers={{ .Values.mlflow.workers | default 4 }}
+              --backend-store-uri="postgresql+psycopg2://{{ .Values.mlflow.postgres.auth.username }}:${MLFLOW_POSTGRES_PASSWORD}@{{ include "chart.fullname" . }}-mlflow-postgres:5432/{{ .Values.mlflow.postgres.auth.database }}"
+              --artifacts-destination={{ .Values.mlflow.artifactRoot | default "/mlflow/data/artifacts" }}
+              --serve-artifacts
+              {{- if .Values.mlflow.allowedHosts }} --allowed-hosts={{ .Values.mlflow.allowedHosts }}{{- end }}
+              {{- with .Values.mlflow.corsAllowedOrigins }} --cors-allowed-origins={{ . }}{{- end }}
+          {{- else }}
           command: ["mlflow"]
           args:
             - server
@@ -54,6 +78,7 @@ spec:
             {{- with .Values.mlflow.corsAllowedOrigins }}
             - --cors-allowed-origins={{ . }}
             {{- end }}
+          {{- end }}
           ports:
             # Port name MUST NOT be "http": the proxy Service selector only
             # matches {name,instance} (not component), so an "http" port here
