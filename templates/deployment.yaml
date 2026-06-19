@@ -101,6 +101,14 @@ spec:
               value: {{ .Values.env.mlflow_experiment_name | quote }}
             {{- end }}
             {{- end }}
+          {{- with .Values.startupProbe }}
+          # Gates liveness/readiness until the app has finished its (slow)
+          # startup — loading providers from Redis can take a while, and without
+          # this the aggressive liveness /ping kills the pod mid-boot (restart
+          # loop on every rollout).
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}

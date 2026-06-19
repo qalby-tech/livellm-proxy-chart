@@ -67,6 +67,16 @@ ingress:
           pathType: ImplementationSpecific
   tls: []
 resources: {}
+# Gates liveness/readiness until startup completes. failureThreshold*periodSeconds
+# is the max startup budget (here 60*5s = 300s) before the pod is considered
+# failed — generous enough for slow provider loading. Set to {} to disable.
+startupProbe:
+  httpGet:
+    path: /ping
+    port: http
+  periodSeconds: 5
+  failureThreshold: 60
+  timeoutSeconds: 3
 livenessProbe:
   httpGet:
     path: /ping
