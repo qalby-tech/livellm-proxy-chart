@@ -168,13 +168,17 @@ mlflow:
   # /mlflow/data; override for an external DB (e.g. postgresql://...).
   backendStoreUri: ""   # default: sqlite:////mlflow/data/mlflow.db
   artifactRoot: ""      # default: /mlflow/data/artifacts
+  # MLflow defaults to 4 uvicorn workers; each loads the full mlflow server and
+  # easily blows past a small memory limit (OOMKilled). For a tracing backend a
+  # couple of workers is plenty.
+  workers: 2
   resources:
     limits:
       cpu: 500m
-      memory: 512Mi
+      memory: 1Gi
     requests:
       cpu: 100m
-      memory: 256Mi
+      memory: 512Mi
   persistence:
     # Recommended for production so traces survive restarts. When false an
     # emptyDir is used and data is lost on pod restart.

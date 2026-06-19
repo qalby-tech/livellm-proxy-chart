@@ -39,6 +39,9 @@ spec:
             - server
             - --host=0.0.0.0
             - --port={{ .Values.mlflow.service.port }}
+            {{- if .Values.mlflow.workers }}
+            - --workers={{ .Values.mlflow.workers }}
+            {{- end }}
             - --backend-store-uri={{ .Values.mlflow.backendStoreUri | default "sqlite:////mlflow/data/mlflow.db" }}
             - --artifacts-destination={{ .Values.mlflow.artifactRoot | default "/mlflow/data/artifacts" }}
             - --serve-artifacts
