@@ -95,6 +95,13 @@ spec:
             - name: MLFLOW_TRACKING_URI
               value: {{ .Values.env.mlflow_tracking_uri | quote }}
             {{- end }}
+            {{- if or .Values.mlflow.enabled (.Values.env).mlflow_tracking_uri }}
+            # Per-process isolated trace-id generator. Without this, multiple
+            # proxy replicas can generate colliding trace-ids -> Postgres
+            # duplicate-key (trace_info_pk) write conflicts.
+            - name: MLFLOW_TRACE_USE_ISOLATED_RANDOM_ID_GENERATOR
+              value: "true"
+            {{- end }}
             {{- if (.Values.env).mlflow_trace_sampling_ratio }}
             # Fraction of traces to record (0..1). The voice pipeline emits a
             # high volume of TTS/ASR spans; sampling keeps the trace backend
