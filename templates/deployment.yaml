@@ -85,6 +85,22 @@ spec:
             - name: DEFAULT_PROJECT
               value: {{ .Values.env.default_project | quote }}
             {{- end }}
+            {{- /* MLflow tracing target. When the bundled MLflow deployment is
+                   enabled, point the proxy at its in-cluster Service; otherwise
+                   honour an explicit env.mlflow_tracking_uri (e.g. external server). */}}
+            {{- if .Values.mlflow.enabled }}
+            - name: MLFLOW_TRACKING_URI
+              value: "http://{{ include "chart.fullname" . }}-mlflow:{{ .Values.mlflow.service.port }}"
+            {{- else if (.Values.env).mlflow_tracking_uri }}
+            - name: MLFLOW_TRACKING_URI
+              value: {{ .Values.env.mlflow_tracking_uri | quote }}
+            {{- end }}
+            {{- if or .Values.mlflow.enabled (.Values.env).mlflow_experiment_name }}
+            {{- if (.Values.env).mlflow_experiment_name }}
+            - name: MLFLOW_EXPERIMENT_NAME
+              value: {{ .Values.env.mlflow_experiment_name | quote }}
+            {{- end }}
+            {{- end }}
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}

@@ -37,6 +37,13 @@ env:
   redis_url: ""
   # Tiktoken safety overhead (default 1.20 = 20 % buffer).
   token_count_overhead: ""
+  # MLflow tracing target. Leave empty when mlflow.enabled=true (the proxy is
+  # auto-pointed at the bundled MLflow Service). Set this to an external MLflow
+  # Tracking Server URI (e.g. http://mlflow.observability:5000) when running
+  # MLflow outside this chart. Ignored when mlflow.enabled=true.
+  mlflow_tracking_uri: ""
+  # MLflow experiment name for traces (created if absent). Optional.
+  mlflow_experiment_name: ""
 serviceAccount:
   create: true
   automount: true
@@ -119,3 +126,53 @@ operator:
     requests:
       cpu: 100m
       memory: 64Mi
+# ---------------------------------------------------------------------------
+# MLflow Tracking Server  (separate deployment for pydantic-ai tracing)
+# When enabled, deploys an MLflow server (StatefulSet + Service + PVC) and
+# auto-points the proxy's MLFLOW_TRACKING_URI at it. Disable to use an external
+# MLflow server via env.mlflow_tracking_uri instead.
+# ---------------------------------------------------------------------------
+mlflow:
+  enabled: false
+  image:
+    # Official MLflow image. Keep the tag aligned with the proxy's mlflow
+    # client version (pyproject: mlflow>=3.12.0) to avoid trace API skew.
+    repository: ghcr.io/mlflow/mlflow
+    tag: "v3.12.0"
+    pullPolicy: IfNotPresent
+  imagePullSecrets: []
+  service:
+    type: ClusterIP
+    port: 5000
+  # Ingress for the MLflow UI. Host-based is recommended (MLflow serves its UI
+  # at the host root). Same shape as the proxy `ingress` block above.
+  ingress:
+    enabled: false
+    className: ""
+    annotations: {}
+    hosts:
+      - host: mlflow.chart-example.local
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+  # Backend store + artifact root. Defaults live on the PVC mounted at
+  # /mlflow/data; override for an external DB (e.g. postgresql://...).
+  backendStoreUri: ""   # default: sqlite:////mlflow/data/mlflow.db
+  artifactRoot: ""      # default: /mlflow/data/artifacts
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  persistence:
+    # Recommended for production so traces survive restarts. When false an
+    # emptyDir is used and data is lost on pod restart.
+    enabled: true
+    size: 5Gi
+    storageClass: ""
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
