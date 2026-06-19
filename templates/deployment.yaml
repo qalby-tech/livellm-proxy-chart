@@ -95,6 +95,13 @@ spec:
             - name: MLFLOW_TRACKING_URI
               value: {{ .Values.env.mlflow_tracking_uri | quote }}
             {{- end }}
+            {{- if (.Values.env).mlflow_trace_sampling_ratio }}
+            # Fraction of traces to record (0..1). The voice pipeline emits a
+            # high volume of TTS/ASR spans; sampling keeps the trace backend
+            # from being overwhelmed.
+            - name: MLFLOW_TRACE_SAMPLING_RATIO
+              value: {{ .Values.env.mlflow_trace_sampling_ratio | quote }}
+            {{- end }}
             {{- if (.Values.env).mlflow_experiment_name }}
             - name: MLFLOW_EXPERIMENT_NAME
               value: {{ .Values.env.mlflow_experiment_name | quote }}

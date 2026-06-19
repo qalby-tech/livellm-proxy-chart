@@ -44,6 +44,9 @@ env:
   mlflow_tracking_uri: ""
   # MLflow experiment name for traces (created if absent). Optional.
   mlflow_experiment_name: ""
+  # Fraction of traces to record, 0..1 (empty = MLflow default 1.0 = all).
+  # Lower this for high-volume pipelines so the trace backend isn't overwhelmed.
+  mlflow_trace_sampling_ratio: ""
 serviceAccount:
   create: true
   automount: true
@@ -184,8 +187,8 @@ mlflow:
   workers: 1
   resources:
     limits:
-      cpu: 500m
-      memory: 2Gi
+      cpu: "1"
+      memory: 4Gi
     requests:
       cpu: 100m
       memory: 1Gi

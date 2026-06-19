@@ -74,12 +74,18 @@ spec:
               port: mlflow
             initialDelaySeconds: 30
             periodSeconds: 20
+            # /health can be slow under heavy trace-write load; a 1s timeout
+            # was failing the probe and killing the pod. Be tolerant.
+            timeoutSeconds: 5
+            failureThreshold: 6
           readinessProbe:
             httpGet:
               path: /health
               port: mlflow
             initialDelaySeconds: 10
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
       {{- with .Values.mlflow.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
