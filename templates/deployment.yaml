@@ -95,7 +95,13 @@ spec:
             - name: MLFLOW_TRACKING_URI
               value: {{ .Values.env.mlflow_tracking_uri | quote }}
             {{- end }}
-            {{- if or .Values.mlflow.enabled (.Values.env).mlflow_experiment_name }}
+            {{- if or .Values.mlflow.enabled (.Values.env).mlflow_tracking_uri }}
+            # The proxy installs its own global OTel TracerProvider (OTLP/Tempo) and
+            # pydantic-ai emits spans to it. Tell MLflow to attach its span processor
+            # to that existing provider instead of an isolated one — otherwise MLflow
+            # never sees the spans and no traces are recorded.
+            - name: MLFLOW_USE_DEFAULT_TRACER_PROVIDER
+              value: "false"
             {{- if (.Values.env).mlflow_experiment_name }}
             - name: MLFLOW_EXPERIMENT_NAME
               value: {{ .Values.env.mlflow_experiment_name | quote }}
